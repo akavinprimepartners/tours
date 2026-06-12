@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Akavin Tours | Immersive Explorer</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #0b1120;
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, sans-serif;
+      line-height: 1.5;
+      color: #eef2ff;
+      scroll-behavior: smooth;
+    }
+
+    /* container */
+    .container {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+
+    /* section spacing */
+    .section {
+      margin-bottom: 4rem;
+      border-radius: 2rem;
+      transition: all 0.2s ease;
+    }
+
+    .section-header {
+      margin-bottom: 1.75rem;
+    }
+
+    .section-header h2 {
+      font-size: 1.8rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #FFFFFF 0%, #b9c8ff 100%);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      display: inline-block;
+      border-left: 4px solid #3b82f6;
+      padding-left: 1rem;
+    }
+
+    .section-desc {
+      color: #9ca3af;
+      margin-top: 0.5rem;
+      font-size: 0.95rem;
+    }
+
+    /* ---- SECTION 1: SPLIT LAYOUT (4/5 link + 1/5 thumbnails) ---- */
+    .split-landscape {
+      display: flex;
+      flex-wrap: wrap;
+      background: #111827;
+      border-radius: 2rem;
+      overflow: hidden;
+      box-shadow: 0 25px 40px -12px rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      transition: transform 0.2s ease;
+    }
+
+    /* 4/5 part: interactive kuula embed & clickable area */
+    .kuula-major {
+      flex: 4;  /* 4 parts out of (4+1) = 4/5 */
+      min-height: 500px;
+      position: relative;
+      background: #000;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .kuula-major iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    .kuula-major {
+      cursor: pointer;
+    }
+
+    /* ensure iframe has some spacing and border radius */
+    .kuula-major iframe {
+      border-radius: 0px;
+      pointer-events: auto; /* fully interactive */
+    }
+
+    /* thumbnails gallery (1/5) */
+    .thumbnail-minor {
+      flex: 1;  /* 1/5 of total width */
+      background: #0f172a;
+      backdrop-filter: blur(4px);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      padding: 1.5rem;
+      border-left: 1px solid rgba(59, 130, 246, 0.4);
+      overflow-y: auto;
+      min-height: 500px;
+    }
+
+    .thumb-card {
+      background: #1e293b;
+      border-radius: 1.25rem;
+      overflow: hidden;
+      transition: all 0.25s ease;
+      cursor: pointer;
+      box-shadow: 0 8px 12px -6px rgba(0, 0, 0, 0.3);
+      border: 1px solid #334155;
+    }
+
+    .thumb-card:hover {
+      transform: translateY(-4px);
+      border-color: #3b82f6;
+      box-shadow: 0 18px 25px -12px #3b82f620;
+    }
+
+    .thumb-img {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      display: block;
+      background: #0f172a;
+    }
+
+    .thumb-card:active {
+      transform: scale(0.98);
+    }
+
+    /* fallback text if images missing */
+    .thumb-img-error {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #111827;
+      color: #94a3b8;
+      font-size: 0.7rem;
+      aspect-ratio: 16/9;
+      text-align: center;
+      padding: 0.5rem;
+    }
+
+    /* responsive: on smaller screens the split becomes column, 4/5 order etc */
+    @media (max-width: 780px) {
+      .split-landscape {
+        flex-direction: column;
+      }
+      .kuula-major {
+        flex: auto;
+        min-height: 460px;
+        width: 100%;
+      }
+      .thumbnail-minor {
+        flex: auto;
+        flex-direction: row;
+        flex-wrap: wrap;
+        border-left: none;
+        border-top: 1px solid #334155;
+        min-height: auto;
+        gap: 0.8rem;
+        justify-content: center;
+      }
+      .thumb-card {
+        width: calc(33% - 0.8rem);
+        min-width: 100px;
+      }
+      .thumb-img {
+        aspect-ratio: 1/1;
+      }
+    }
+
+    @media (max-width: 550px) {
+      .thumbnail-minor .thumb-card {
+        width: calc(50% - 0.8rem);
+      }
+      .container {
+        padding: 1rem;
+      }
+    }
+
+    /* specific hover for kuula block indicator */
+    .kuula-major::after {
+      content: "🔗 CLICK ANYWHERE TO OPEN FULL VR TOUR";
+      position: absolute;
+      bottom: 12px;
+      right: 16px;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(8px);
+      padding: 5px 12px;
+      border-radius: 40px;
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: white;
+      z-index: 20;
+      pointer-events: none;
+      letter-spacing: 0.3px;
+      font-family: monospace;
+      border: 1px solid #3b82f6;
+    }
+
+    .kuula-major:hover::after {
+      background: #1e40afcc;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <!-- SECTION 1: main tour + asset thumbnails (4/5 linked + 1/5 pics pointing to local assets) -->
+  <div class="section">
+    <div class="section-header">
+      <h2>✨ 360° Virtual Expedition</h2>
+      <div class="section-desc">Immerse yourself in 4/5 panoramic journey | Explore local snapshots in the right panel</div>
+    </div>
+    <div class="split-landscape">
+      <!-- 4/5 part: kuula interactive embed with full link behavior -->
+      <div class="kuula-major" id="kuulaBlock">
+        <!-- embedded kuula tour -->
+        <iframe 
+          src="https://kuula.co/share/5RD8f?logo=1&info=1&fs=1&vr=0&sd=1&thumbs=1" 
+          allow="fullscreen; gyroscope; accelerometer; vr; xr-spatial-tracking" 
+          allowfullscreen 
+          loading="lazy"
+          title="Akavin 360 VR Tour"
+          referrerpolicy="strict-origin-when-cross-origin">
+        </iframe>
+      </div>
+
+      <!-- 1/5 part: pics pointing to www.tours.akavin.online/assets/ -->
+      <div class="thumbnail-minor" id="assetGallery">
+        <!-- dynamic thumbnails generation for images inside assets folder -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    // --- 1) ensure the 4/5 block (kuula-major) links to Kuula full page when clicked
+    const kuulaContainer = document.getElementById('kuulaBlock');
+    const kuulaUrl = 'https://kuula.co/share/5RD8f?logo=1&info=1&fs=1&vr=0&sd=1&thumbs=1';
+    
+    if (kuulaContainer) {
+      kuulaContainer.addEventListener('click', (e) => {
+        window.open(kuulaUrl, '_blank', 'noopener,noreferrer');
+      });
+      kuulaContainer.setAttribute('aria-label', 'Open full 360 VR tour in new window (Kuula)');
+    }
+    
+    // --- 2) Build thumbnail gallery 1/5 part: pics pointing to www.tours.akavin.online/assets/
+    const assetBaseURL = 'https://www.tours.akavin.online/assets/';
+    // Asset list - image filenames that should exist in the /assets/ directory
+    const assetList = [
+      { file: 'view1.jpg' },
+      { file: 'temple.jpg' },
+      { file: 'waterfall.jpg' },
+      { file: 'village.jpg' },
+      { file: 'forest.jpg' },
+      { file: 'market.jpg' },
+      { file: 'peak.jpg' },
+      { file: 'river.jpg' }
+    ];
+    
+    const galleryContainer = document.getElementById('assetGallery');
+    if (galleryContainer) {
+      galleryContainer.innerHTML = '';
+      
+      assetList.forEach(asset => {
+        const imageUrl = assetBaseURL + asset.file;
+        const card = document.createElement('div');
+        card.className = 'thumb-card';
+        
+        const imgWrapper = document.createElement('div');
+        const img = document.createElement('img');
+        img.className = 'thumb-img';
+        img.alt = '';  // empty alt as per removal of names
+        img.loading = 'lazy';
+        img.src = imageUrl;
+        img.onerror = function() {
+          this.style.display = 'none';
+          const fallbackDiv = document.createElement('div');
+          fallbackDiv.className = 'thumb-img-error';
+          fallbackDiv.innerHTML = `⚠️ ${asset.file}<br>add to /assets/`;
+          fallbackDiv.style.display = 'flex';
+          fallbackDiv.style.alignItems = 'center';
+          fallbackDiv.style.justifyContent = 'center';
+          fallbackDiv.style.background = '#0f172a';
+          fallbackDiv.style.color = '#94a3b8';
+          fallbackDiv.style.fontSize = '0.7rem';
+          fallbackDiv.style.padding = '0.5rem';
+          fallbackDiv.style.textAlign = 'center';
+          imgWrapper.appendChild(fallbackDiv);
+        };
+        
+        imgWrapper.appendChild(img);
+        card.appendChild(imgWrapper);
+        
+        // Click on thumbnail: opens full resolution image in new tab (pointing to actual asset path).
+        card.addEventListener('click', (e) => {
+          e.stopPropagation();
+          window.open(imageUrl, '_blank');
+        });
+        
+        galleryContainer.appendChild(card);
+      });
+      
+      // Add a subtle note about assets folder (light, no extra removal requested but keeps functional)
+      const infoNote = document.createElement('div');
+      infoNote.style.fontSize = '0.65rem';
+      infoNote.style.textAlign = 'center';
+      infoNote.style.padding = '0.5rem';
+      infoNote.style.color = '#6c86a3';
+      infoNote.style.borderTop = '1px dashed #334155';
+      infoNote.style.marginTop = '0.5rem';
+      infoNote.innerText = '📁 Assets from /assets/ — click any pic to open full resolution';
+      galleryContainer.appendChild(infoNote);
+    }
+  })();
+</script>
+</body>
+</html>
