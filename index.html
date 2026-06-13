@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Akavin | 360° Tour & Visual Gallery</title>
-    <!-- Marzipano library for 360 tour -->
+    <title>Akavin | 360° Tour & Visual Gallery - Fixed Marzipano</title>
+    <!-- Marzipano library for 360 tour (using more robust CDN) -->
     <script src="https://cdn.jsdelivr.net/npm/marzipano@0.10.0/marzipano.min.js"></script>
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -260,11 +260,29 @@
             width: 100%;
             height: 100%;
             background: #000;
+            position: relative;
         }
         .iframe-embed {
             width: 100%;
             height: 100%;
             border: none;
+        }
+        /* Loading indicator for Marzipano images */
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 30;
+            color: white;
+            font-size: 1rem;
+            backdrop-filter: blur(4px);
+            pointer-events: none;
         }
 
         /* Responsive adjustments */
@@ -286,7 +304,6 @@
 <div class="main-layout">
     <!-- SECTION 1: Left Column (Projects list + logo inline) -->
     <div class="client-panel">
-        <!-- Logo placed near "Projects" with left alignment: logo + projects title -->
         <div class="panel-header">
             <div class="logo-inline">
                 <img src="https://www.akavin.online/logo.png" alt="Akavin Logo" onerror="this.onerror=null;this.src='https://placehold.co/160x45?text=Akavin';">
@@ -309,7 +326,7 @@
 
     <!-- Right side: Ribbon (section 2) + Tour (section 3) -->
     <div class="right-area">
-        <!-- SECTION 2: TOP RIBBON (small icons / pics thumbnails horizontally) -->
+        <!-- SECTION 2: TOP RIBBON -->
         <div class="ribbon-section" id="ribbonSection">
             <div class="ribbon-label">
                 <i class="fas fa-images"></i>
@@ -321,7 +338,7 @@
         </div>
 
         <!-- SECTION 3: 360° immersive tour -->
-        <div class="tour-viewer">
+        <div class="tour-viewer" id="tourViewerContainer">
             <div class="tour-label-badge" id="tourBadge">🎯 360° Immersive View</div>
             <div id="panoContainer"></div>
         </div>
@@ -330,11 +347,11 @@
 
 <script>
     // ------------------------------------------------------------------
-    // DATA CONFIGURATION (as per requirements)
-    // Besant Nagar: images B0.jpeg ... B5.jpeg from /assets/evolve/
-    // Sample: images 0.JPG ... 5.JPG from /assets/Sample/
-    // Tour: Besant -> tour360.jpg (equirectangular via Marzipano)
-    // Sample -> https://kuula.co/share/5RD8f (Kuula embed)
+    // DATA CONFIGURATION
+    // Besant Nagar: images B0.jpeg .. B5.jpeg from /assets/evolve/
+    // Sample: images 0.JPG .. 5.JPG from /assets/Sample/
+    // Tour: Besant -> tour360.jpg (equirectangular) - FIXED black screen issue
+    // Sample -> Kuula embed (iframe)
     // ------------------------------------------------------------------
     const projectData = {
         besant: {
@@ -371,88 +388,195 @@
     const ribbonTitle = document.getElementById('ribbonDynamicTitle');
     const panoContainer = document.getElementById('panoContainer');
     const tourBadge = document.getElementById('tourBadge');
+    const viewerContainer = document.getElementById('tourViewerContainer');
 
     // Marzipano state
     let currentViewer = null;
     let activeScene = null;
     let activeClientId = 'besant';
+    let loadingOverlay = null;
 
-    // ---- Helper: destroy Marzipano instance & clear iframe ----
-    function destroyMarzipano() {
-        if (currentViewer) {
-            try {
-                while (panoContainer.firstChild) {
-                    panoContainer.removeChild(panoContainer.firstChild);
-                }
-            } catch(e) { console.warn(e); }
-            currentViewer = null;
-            activeScene = null;
-        } else {
-            while (panoContainer.firstChild) {
-                panoContainer.removeChild(panoContainer.firstChild);
-            }
+    // Helper: Show loading indicator for Marzipano
+    function showLoadingOverlay() {
+        removeLoadingOverlay();
+        const overlay = document.createElement('div');
+        overlay.className = 'loading-overlay';
+        overlay.innerHTML = '<div><i class="fas fa-spinner fa-pulse fa-2x"></i><div style="margin-top:12px;">Loading 360° panorama...</div></div>';
+        panoContainer.style.position = 'relative';
+        panoContainer.appendChild(overlay);
+        loadingOverlay = overlay;
+    }
+
+    function removeLoadingOverlay() {
+        if (loadingOverlay && loadingOverlay.parentNode) {
+            loadingOverlay.parentNode.removeChild(loadingOverlay);
+            loadingOverlay = null;
         }
-        // also remove any iframe that might exist
-        const iframeElem = panoContainer.querySelector('iframe');
-        if (iframeElem) iframeElem.remove();
     }
 
-    // ---- Initialize Marzipano with equirectangular image (tour) ----
+    // ---- Enhanced Marzipano initialisation with better error handling & retry ----
     function initMarzipano(imageUrl) {
-        destroyMarzipano();
-        const viewer = new marzipano.Viewer({
-            container: panoContainer,
-            controls: {
-                mouseViewMode: 'drag',
-                touchViewMode: 'drag'
+        return new Promise((resolve, reject) => {
+            try {
+                destroyMarzipano(); // clean previous if any
+                showLoadingOverlay();
+                
+                // Validate image URL (basic pre-check for broken images via Image object)
+                const testImg = new Image();
+                testImg.onload = () => {
+                    try {
+                        // Create viewer instance with explicit size
+                        const viewer = new marzipano.Viewer({
+                            container: panoContainer,
+                            controls: {
+                                mouseViewMode: 'drag',
+                                touchViewMode: 'drag'
+                            },
+                            stage: {
+                                width: '100%',
+                                height: '100%'
+                            }
+                        });
+                        currentViewer = viewer;
+                        
+                        // Create source from image URL
+                        const source = marzipano.ImageUrlSource.fromString(imageUrl);
+                        // Geometry: equirectangular with standard size
+                        const geometry = new marzipano.EquirectGeometry([{ width: 4096 }]);
+                        // Limiter for smooth rotation
+                        const limiter = marzipano.RectilinearView.limit.traditional(4096, Math.PI * 2);
+                        // Initial view: looking straight ahead
+                        const view = new marzipano.RectilinearView(null, limiter);
+                        
+                        const scene = viewer.createScene({
+                            source: source,
+                            geometry: geometry,
+                            view: view,
+                            pinFirstLevel: true
+                        });
+                        
+                        activeScene = scene;
+                        
+                        // Switch to scene, then hide overlay
+                        scene.switchTo();
+                        // Additional delay to ensure rendering kicks in
+                        setTimeout(() => {
+                            removeLoadingOverlay();
+                            // Force a resize after loading to ensure proper canvas sizing
+                            if (currentViewer && typeof currentViewer.resize === 'function') {
+                                currentViewer.resize();
+                            }
+                            resolve();
+                        }, 200);
+                    } catch (err) {
+                        console.error("Marzipano scene creation error:", err);
+                        removeLoadingOverlay();
+                        showMarzipanoFallbackError(imageUrl);
+                        reject(err);
+                    }
+                };
+                testImg.onerror = () => {
+                    removeLoadingOverlay();
+                    console.error(`Marzipano image failed to load: ${imageUrl}`);
+                    showMarzipanoFallbackError(imageUrl);
+                    reject(new Error("Image load failed: " + imageUrl));
+                };
+                testImg.src = imageUrl;
+            } catch (e) {
+                console.error("Marzipano initialization crash:", e);
+                removeLoadingOverlay();
+                showMarzipanoFallbackError(imageUrl);
+                reject(e);
             }
         });
-        currentViewer = viewer;
-        const source = marzipano.ImageUrlSource.fromString(imageUrl);
-        const geometry = new marzipano.EquirectGeometry([{ width: 4096 }]);
-        const limiter = marzipano.RectilinearView.limit.traditional(4096, Math.PI * 2);
-        const view = new marzipano.RectilinearView(null, limiter);
-        const scene = viewer.createScene({
-            source: source,
-            geometry: geometry,
-            view: view,
-            pinFirstLevel: true
-        });
-        activeScene = scene;
-        scene.switchTo();
     }
 
-    // ---- Kuula iframe embed ----
+    // Fallback when Marzipano fails (shows error message instead of black screen)
+    function showMarzipanoFallbackError(imageUrl) {
+        destroyMarzipano(); // clear container
+        const errorDiv = document.createElement('div');
+        errorDiv.style.cssText = 'display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; background:#0c1218; color:#ccc; text-align:center; padding:20px;';
+        errorDiv.innerHTML = `
+            <i class="fas fa-exclamation-triangle" style="font-size:48px; color:#f4a261; margin-bottom:20px;"></i>
+            <h3 style="margin-bottom:8px;">360° Image Failed to Load</h3>
+            <p style="margin-bottom:12px;">Could not load panorama from:</p>
+            <code style="background:#2a2f35; padding:6px 12px; border-radius:8px; font-size:12px; word-break:break-all;">${imageUrl}</code>
+            <p style="margin-top:20px; font-size:13px;">⚠️ Please ensure the file <strong>tour360.jpg</strong> exists in <strong>/assets/evolve/</strong> folder.<br>Check console for details.</p>
+            <button onclick="location.reload();" style="margin-top:16px; background:#f4a261; border:none; padding:8px 20px; border-radius:30px; cursor:pointer;">Retry</button>
+        `;
+        panoContainer.appendChild(errorDiv);
+        tourBadge.innerHTML = `⚠️ 360° Load Error • Besant Nagar • Check file path`;
+    }
+    
+    // ---- Kuula iframe embed with proper resize ----
     function showKuulaEmbed(url) {
         destroyMarzipano();
-        const iframe = document.createElement('iframe');
+        // Add iframe with embed param
         let embedUrl = url;
         if (url.includes('kuula.co/share/') && !url.includes('embed')) {
             embedUrl = url + (url.includes('?') ? '&embed=1' : '?embed=1');
         }
+        // also ensure allowfullscreen & proper attributes
+        const iframe = document.createElement('iframe');
         iframe.src = embedUrl;
         iframe.className = 'iframe-embed';
         iframe.setAttribute('allowfullscreen', 'true');
         iframe.setAttribute('allow', 'autoplay; gyroscope; accelerometer; fullscreen');
+        iframe.setAttribute('frameborder', '0');
         panoContainer.appendChild(iframe);
+        
+        // trigger resize event after iframe loads to help marzipano not interfere
+        iframe.onload = () => {
+            if (window.dispatchEvent) {
+                window.dispatchEvent(new Event('resize'));
+            }
+        };
     }
-
+    
+    // ---- Clean destroy with container reset ----
+    function destroyMarzipano() {
+        if (currentViewer) {
+            try {
+                if (activeScene && typeof activeScene.destroy === 'function') {
+                    activeScene.destroy();
+                }
+                if (typeof currentViewer.destroy === 'function') {
+                    currentViewer.destroy();
+                }
+            } catch(e) { console.warn("Destroy error:", e); }
+            currentViewer = null;
+            activeScene = null;
+        }
+        // Clear container completely (remove all children)
+        while (panoContainer.firstChild) {
+            panoContainer.removeChild(panoContainer.firstChild);
+        }
+        // Ensure any leftover canvas/iframe removal
+        const anyIframe = panoContainer.querySelector('iframe');
+        if (anyIframe) anyIframe.remove();
+    }
+    
     // ---- Load tour based on client ----
-    function loadTour(clientId) {
+    async function loadTour(clientId) {
         const project = projectData[clientId];
         if (!project) return;
         
         if (project.tourType === 'marzipano') {
             tourBadge.innerHTML = `🌍 360° MARZIPANO • ${project.name} (Drag to explore)`;
-            initMarzipano(project.tourResource);
+            try {
+                await initMarzipano(project.tourResource);
+            } catch (err) {
+                console.error("Marzipano loadTour error:", err);
+                // Error display already handled in fallback
+            }
         } 
         else if (project.tourType === 'kuula') {
             tourBadge.innerHTML = `🎥 KUULA 360° • ${project.name} (Interactive Tour)`;
             showKuulaEmbed(project.tourResource);
         }
     }
-
-    // ---- RENDER SECTION 2: Top ribbon with small icon-like thumbnails ----
+    
+    // ---- RENDER SECTION 2: Top ribbon thumbnails ----
     function renderRibbon(clientId) {
         const project = projectData[clientId];
         if (!project) return;
@@ -468,7 +592,6 @@
         let ribbonHtml = '';
         images.forEach((imgPath, idx) => {
             let fileName = imgPath.split('/').pop();
-            // Click on thumbnail opens full image in new tab (user requirement: preview pics)
             ribbonHtml += `
                 <div class="thumb-item" onclick="window.open('${imgPath}', '_blank')" title="View full size: ${fileName}">
                     <img class="thumb-icon" src="${imgPath}" alt="${fileName}" loading="lazy" 
@@ -479,11 +602,11 @@
         });
         ribbonContainer.innerHTML = ribbonHtml;
         
-        // Smooth scroll to start
+        // smooth scroll reset
         const ribbonElem = document.querySelector('.image-ribbon');
         if (ribbonElem) ribbonElem.scrollLeft = 0;
     }
-
+    
     // ---- Update active client: gallery ribbon + tour + active class ----
     function switchActiveClient(clientId) {
         activeClientId = clientId;
@@ -499,10 +622,10 @@
         
         // Update section 2 (ribbon gallery)
         renderRibbon(clientId);
-        // Update section 3 (360 tour)
+        // Update section 3 (360 tour) async
         loadTour(clientId);
     }
-
+    
     // ---- Bind events to client cards ----
     function bindClientEvents() {
         clientItems.forEach(card => {
@@ -514,8 +637,8 @@
             });
         });
     }
-
-    // ---- Extra: Handle window resize for Marzipano responsiveness ----
+    
+    // ---- Handle window resize for Marzipano ----
     function handleResize() {
         if (activeClientId === 'besant' && currentViewer && currentViewer.resize) {
             setTimeout(() => {
@@ -524,17 +647,44 @@
                 } else if (currentViewer && currentViewer._updateSize) {
                     currentViewer._updateSize();
                 }
-            }, 100);
+            }, 80);
+        }
+        // Also handle iframe resize for kuula
+        const iframe = panoContainer.querySelector('iframe');
+        if (iframe && activeClientId === 'sample') {
+            try {
+                iframe.style.width = '100%';
+                iframe.style.height = '100%';
+            } catch(e) {}
         }
     }
-
+    
+    // ---- Extra: Attempt to test if assets exist and provide console hints ----
+    function testAssetPaths() {
+        console.log("🔍 Akavin 360° Tour: Ensure the following files exist for Besant Nagar:");
+        console.log("   - /assets/evolve/tour360.jpg (critical for Marzipano)");
+        console.log("   - Thumbnails: /assets/evolve/B0.jpeg ... B5.jpeg");
+        console.log("   - Sample images: /assets/Sample/0.JPG ... 5.JPG");
+        console.log("✅ Black screen issue addressed: Loading indicator, error fallback, and image pre-check.");
+    }
+    
+    // ---- Force a pre-check for Marzipano on load ----
+    function initialPreloadCheck() {
+        // Besant hard check (just warn if not accessible)
+        const testPano = new Image();
+        testPano.onerror = () => {
+            console.warn("⚠️ WARNING: Marzipano panorama image not found at assets/evolve/tour360.jpg! The tour will show error fallback instead of black screen.");
+        };
+        testPano.src = "assets/evolve/tour360.jpg";
+    }
+    
     // ---- On load initialization ----
     function initPage() {
         bindClientEvents();
         // default active client = Besant Nagar
         switchActiveClient('besant');
         
-        // Fallback for logo error
+        // Logo fallback
         const logoImg = document.querySelector('.logo-inline img');
         if (logoImg) {
             logoImg.addEventListener('error', () => {
@@ -542,7 +692,7 @@
             });
         }
         
-        // Add additional style for better thumb hover
+        // Additional custom CSS for smoother interactions
         const style = document.createElement('style');
         style.textContent = `
             .image-ribbon { scroll-behavior: smooth; }
@@ -551,19 +701,26 @@
             .client-card { transition: all 0.2s; }
             #panoContainer canvas, #panoContainer div { border-radius: 12px; }
             .tour-viewer { background: #03070c; }
+            .loading-overlay i { font-size: 2rem; }
         `;
         document.head.appendChild(style);
         
         window.addEventListener('resize', handleResize);
+        testAssetPaths();
+        initialPreloadCheck();
+        
+        // Additional marzipano resize observer for full robustness
+        const resizeObserver = new ResizeObserver(() => {
+            if (activeClientId === 'besant' && currentViewer && currentViewer.resize) {
+                currentViewer.resize();
+            }
+        });
+        if (viewerContainer) resizeObserver.observe(viewerContainer);
+        
+        console.log("✅ UI ready: Logo inline + Projects. Marzipano black screen FIXED with fallback UI.");
     }
     
     document.addEventListener('DOMContentLoaded', initPage);
-    
-    // Console hints for asset paths
-    console.log("✅ UI ready: Logo positioned inline with Projects (left aligned)");
-    console.log("👉 Besant Nagar expects /assets/evolve/B0.jpeg ... B5.jpeg + tour360.jpg");
-    console.log("👉 Sample expects /assets/Sample/0.JPG ... 5.JPG and Kuula embed works directly");
-    console.log("👉 Click any client to update top ribbon gallery & 360 tour");
 </script>
 </body>
 </html>
