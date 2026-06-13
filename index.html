@@ -56,7 +56,39 @@
       font-size: 0.95rem;
     }
 
-    /* ---- SECTION 1: SPLIT LAYOUT (4/5 link + 1/5 thumbnails) ---- */
+      <!-- 1/5 part: pics pointing to www.tours.akavin.online/assets/ -->
+      <div class="thumbnail-minor" id="assetGallery">
+        <!-- dynamic thumbnails generation for images inside assets folder -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    // --- 1) ensure the 4/5 block (kuula-major) links to Kuula full page when clicked
+    const kuulaContainer = document.getElementById('kuulaBlock');
+    const kuulaUrl = 'https://kuula.co/share/5RD8f?logo=1&info=1&fs=1&vr=0&sd=1&thumbs=1';
+    
+    if (kuulaContainer) {
+      kuulaContainer.addEventListener('click', (e) => {
+        window.open(kuulaUrl, '_blank', 'noopener,noreferrer');
+      });
+      kuulaContainer.setAttribute('aria-label', 'Open full 360 VR tour in new window (Kuula)');
+    }
+    
+    // --- 2) Build thumbnail gallery 1/5 part: pics pointing to www.tours.akavin.online/assets/
+    const assetBaseURL = 'assets/';
+    // Asset list - image filenames that should exist in the /assets/ directory
+    const assetList = [
+      { file: '1.JPG' },
+      { file: '2.JPG' },
+      { file: '3.JPG' },
+      { file: '4.JPG' },
+      { file: '5.JPG' }
+    ];
+
+        /* ---- SECTION 1: SPLIT LAYOUT (4/5 link + 1/5 thumbnails) ---- */
     .split-landscape {
       display: flex;
       flex-wrap: wrap;
@@ -216,37 +248,7 @@
         </iframe>
       </div>
 
-      <!-- 1/5 part: pics pointing to www.tours.akavin.online/assets/ -->
-      <div class="thumbnail-minor" id="assetGallery">
-        <!-- dynamic thumbnails generation for images inside assets folder -->
-      </div>
-    </div>
-  </div>
-</div>
 
-<script>
-  (function() {
-    // --- 1) ensure the 4/5 block (kuula-major) links to Kuula full page when clicked
-    const kuulaContainer = document.getElementById('kuulaBlock');
-    const kuulaUrl = 'https://kuula.co/share/5RD8f?logo=1&info=1&fs=1&vr=0&sd=1&thumbs=1';
-    
-    if (kuulaContainer) {
-      kuulaContainer.addEventListener('click', (e) => {
-        window.open(kuulaUrl, '_blank', 'noopener,noreferrer');
-      });
-      kuulaContainer.setAttribute('aria-label', 'Open full 360 VR tour in new window (Kuula)');
-    }
-    
-    // --- 2) Build thumbnail gallery 1/5 part: pics pointing to www.tours.akavin.online/assets/
-    const assetBaseURL = 'assets/';
-    // Asset list - image filenames that should exist in the /assets/ directory
-    const assetList = [
-      { file: '1.JPG' },
-      { file: '2.JPG' },
-      { file: '3.JPG' },
-      { file: '4.JPG' },
-      { file: '5.JPG' }
-    ];
     
     const galleryContainer = document.getElementById('assetGallery');
     if (galleryContainer) {
