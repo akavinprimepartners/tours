@@ -1,438 +1,599 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>Akavin Tours | Immersive Explorer</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Akavin | 360° Tour & Visual Gallery</title>
+    <script src="https://cdn.jsdelivr.net/npm/marzipano@0.10.0/marzipano.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    body {
-      background: #0b1120;
-      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, sans-serif;
-      line-height: 1.5;
-      color: #eef2ff;
-      scroll-behavior: smooth;
-    }
+        body {
+            font-family: 'Inter', system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: #f2f6fa;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
 
-    .container {
-      max-width: 1440px;
-      margin: 0 auto;
-      padding: 2rem 1.5rem;
-      position: relative;
-    }
+        .main-layout {
+            display: flex;
+            flex: 1;
+            height: 100vh;
+            overflow: hidden;
+        }
 
-    /* top-right corner contact banner */
-    .contact-corner {
-      position: absolute;
-      top: 1.5rem;
-      right: 1.5rem;
-      z-index: 50;
-      background: rgba(15, 23, 42, 0.85);
-      backdrop-filter: blur(8px);
-      padding: 0.6rem 1.2rem;
-      border-radius: 60px;
-      border: 1px solid rgba(59, 130, 246, 0.35);
-      font-size: 0.8rem;
-      font-weight: 500;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-      transition: all 0.2s ease;
-      white-space: nowrap;
-    }
-    .contact-corner a {
-      color: #60a5fa;
-      text-decoration: none;
-      font-weight: bold;
-      border-bottom: 1px solid #3b82f6;
-      transition: color 0.2s;
-    }
-    .contact-corner a:hover {
-      color: #93c5fd;
-      border-bottom-color: #93c5fd;
-    }
-    .contact-corner:hover {
-      background: rgba(30, 41, 59, 0.95);
-      border-color: #3b82f6;
-    }
-    @media (max-width: 780px) {
-      .contact-corner {
-        position: relative;
-        top: 0;
-        right: 0;
-        display: inline-block;
-        margin-bottom: 1.5rem;
-        width: fit-content;
-        white-space: normal;
-        text-align: center;
-        font-size: 0.7rem;
-        padding: 0.5rem 1rem;
-      }
-      .container {
-        padding: 1.5rem 1rem;
-      }
-    }
+        .client-panel {
+            width: 300px;
+            background: #ffffff;
+            border-right: 1px solid #e2e9f2;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
 
-    .section {
-      margin-bottom: 4rem;
-      border-radius: 2rem;
-      transition: all 0.2s ease;
-    }
+        .panel-header {
+            padding: 24px 20px 12px 24px;
+            border-bottom: 1px solid #eef2f8;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: white;
+        }
+        .logo-inline img {
+            height: 42px;
+            width: auto;
+            max-width: 150px;
+            object-fit: contain;
+        }
+        .projects-title {
+            font-size: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #2c5a7a;
+            background: #ecf3f9;
+            padding: 6px 14px;
+            border-radius: 40px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .projects-title i { color: #f4a261; }
 
-    .section-header {
-      margin-bottom: 1.75rem;
-    }
+        .client-list-container {
+            padding: 20px 16px 24px 20px;
+            flex: 1;
+        }
+        .client-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .client-card {
+            background: #f9fbfe;
+            border-radius: 20px;
+            padding: 14px 18px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            font-weight: 600;
+            color: #1f4468;
+            border: 1px solid #eef3fc;
+        }
+        .client-card i {
+            font-size: 1.3rem;
+            width: 32px;
+            color: #f4a261;
+        }
+        .client-card:hover {
+            background: #eef3fa;
+            transform: translateX(6px);
+        }
+        .client-card.active {
+            background: #1e4663;
+            color: white;
+            border-color: #1e4663;
+        }
+        .client-card.active i { color: #ffe0a3; }
 
-    /* removed blue line: border-left removed */
-    .section-header h2 {
-      font-size: 1.8rem;
-      font-weight: 600;
-      letter-spacing: -0.02em;
-      background: linear-gradient(135deg, #FFFFFF 0%, #b9c8ff 100%);
-      background-clip: text;
-      -webkit-background-clip: text;
-      color: transparent;
-      display: inline-block;
-      /* no border-left */
-      padding-left: 0;
-    }
+        .right-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: #fefefe;
+        }
 
-    /* no description lines under headings — removed via HTML, but style remains clean */
-    
-    /* ---------- SECTION 1: IMAGE GALLERY ---------- */
-    .gallery-grid {
-      background: #111827;
-      border-radius: 2rem;
-      padding: 2rem;
-      border: 1px solid rgba(59, 130, 246, 0.2);
-      box-shadow: 0 25px 40px -12px rgba(0, 0, 0, 0.6);
-    }
+        .ribbon-section {
+            background: #ffffff;
+            border-bottom: 1px solid #e5edf5;
+            padding: 12px 20px 10px 20px;
+            flex-shrink: 0;
+        }
+        .ribbon-label {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .ribbon-label h4 {
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #4a6f8f;
+        }
+        .image-ribbon {
+            display: flex;
+            gap: 14px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+        .image-ribbon::-webkit-scrollbar { height: 5px; }
+        .thumb-item {
+            flex: 0 0 auto;
+            width: 85px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.15s ease;
+        }
+        .thumb-item:hover { transform: translateY(-4px); }
+        .thumb-icon {
+            width: 75px;
+            height: 75px;
+            border-radius: 18px;
+            object-fit: cover;
+            background: #eef2f9;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.05);
+            border: 2px solid white;
+        }
+        .thumb-item span {
+            display: block;
+            font-size: 0.62rem;
+            margin-top: 6px;
+            font-weight: 500;
+            color: #2c5a7a;
+            background: #f0f4f9;
+            padding: 2px 6px;
+            border-radius: 40px;
+        }
+        .no-ribbon-msg {
+            color: #859dae;
+            font-size: 0.85rem;
+            padding: 18px 0;
+            text-align: center;
+        }
 
-    .thumbnail-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1.5rem;
-    }
+        .tour-viewer {
+            flex: 1;
+            background: #0c1218;
+            position: relative;
+            min-height: 0;
+            border-radius: 16px;
+            overflow: hidden;
+            margin: 6px 16px 16px 16px;
+            box-shadow: 0 10px 24px rgba(0,0,0,0.2);
+        }
+        .tour-label-badge {
+            position: absolute;
+            top: 14px;
+            left: 20px;
+            z-index: 20;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
+            padding: 6px 16px;
+            border-radius: 40px;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 500;
+            pointer-events: none;
+        }
+        #panoContainer {
+            width: 100%;
+            height: 100%;
+            background: #000;
+        }
+        .iframe-embed {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        .info-panel {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            z-index: 20;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(8px);
+            padding: 8px 16px;
+            border-radius: 40px;
+            color: #f4a261;
+            font-size: 0.7rem;
+            font-family: monospace;
+            pointer-events: none;
+        }
+        .error-message {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            background: #0c1218;
+            color: #ccc;
+            text-align: center;
+            padding: 20px;
+        }
+        .error-message i {
+            font-size: 48px;
+            color: #f4a261;
+            margin-bottom: 20px;
+        }
+        .error-message code {
+            background: #2a2f35;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            margin: 12px 0;
+            word-break: break-all;
+        }
+        .success-message {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            z-index: 20;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(8px);
+            padding: 6px 12px;
+            border-radius: 20px;
+            color: #4caf50;
+            font-size: 0.7rem;
+            pointer-events: none;
+        }
 
-    .thumb-card {
-      background: #1e293b;
-      border-radius: 1.25rem;
-      overflow: hidden;
-      transition: all 0.25s ease;
-      cursor: pointer;
-      box-shadow: 0 8px 12px -6px rgba(0, 0, 0, 0.3);
-      border: 1px solid #334155;
-    }
-
-    .thumb-card:hover {
-      transform: translateY(-4px);
-      border-color: #3b82f6;
-      box-shadow: 0 18px 25px -12px #3b82f620;
-    }
-
-    .thumb-img {
-      width: 100%;
-      aspect-ratio: 16 / 9;
-      object-fit: cover;
-      display: block;
-      background: #0f172a;
-    }
-
-    .thumb-card:active {
-      transform: scale(0.98);
-    }
-
-    .thumb-img-error {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #111827;
-      color: #94a3b8;
-      font-size: 0.7rem;
-      aspect-ratio: 16/9;
-      text-align: center;
-      padding: 0.5rem;
-    }
-
-    /* ---------- SECTION 2: 360° TOUR (no extra text, clean) ---------- */
-    .tour-wrapper {
-      background: #111827;
-      border-radius: 2rem;
-      overflow: hidden;
-      box-shadow: 0 25px 40px -12px rgba(0, 0, 0, 0.6);
-      border: 1px solid rgba(59, 130, 246, 0.2);
-      transition: transform 0.2s ease;
-    }
-
-    .kuula-embed-container {
-      position: relative;
-      width: 100%;
-      min-height: 560px;
-      background: #000;
-      cursor: pointer;
-    }
-
-    .kuula-embed-container iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-      display: block;
-      position: absolute;
-      top: 0;
-      left: 0;
-    }
-
-    .kuula-embed-container {
-      cursor: pointer;
-      min-height: 560px;
-    }
-
-    .kuula-embed-container iframe {
-      border-radius: 0px;
-      pointer-events: auto;
-    }
-
-    /* subtle hover effect only */
-    .kuula-embed-container:hover::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(30, 64, 175, 0.08);
-      pointer-events: none;
-      border-radius: inherit;
-    }
-
-    /* Responsive adjustments */
-    @media (max-width: 780px) {
-      .thumbnail-grid {
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 1rem;
-      }
-      .kuula-embed-container {
-        min-height: 460px;
-      }
-      .section-header h2 {
-        font-size: 1.5rem;
-      }
-      .gallery-grid {
-        padding: 1.25rem;
-      }
-    }
-
-    @media (max-width: 550px) {
-      .thumbnail-grid {
-        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-      }
-      .kuula-embed-container {
-        min-height: 380px;
-      }
-    }
-
-    .thumb-loading {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #0f172a;
-      aspect-ratio: 16/9;
-      color: #5f7fbf;
-      font-size: 0.8rem;
-      border-radius: 1rem;
-    }
-
-    /* accessibility focus */
-    .thumb-card:focus-visible {
-      outline: 2px solid #3b82f6;
-      outline-offset: 2px;
-      border-radius: 1.25rem;
-    }
-    .kuula-embed-container:focus-visible {
-      outline: 2px solid #3b82f6;
-      outline-offset: 2px;
-    }
-  </style>
+        @media (max-width: 800px) {
+            .client-panel { width: 260px; }
+        }
+        @media (max-width: 650px) {
+            .main-layout { flex-direction: column; }
+            .client-panel { width: 100%; max-height: 200px; }
+        }
+    </style>
 </head>
 <body>
-<div class="container">
-  <!-- top right corner: bold clickable email (no extra text, just contact line) -->
-  <div class="contact-corner">
-    📧 For custom assets or sharing your journey, reach out to <a href="mailto:business@akavin.online">business@akavin.online</a>
-  </div>
 
-  <!-- SECTION 1: IMAGE GALLERY (1/5 images, moved to first section, no blue line, no subtext) -->
-  <div class="section">
-    <div class="section-header">
-      <h2>📸 Expedition Gallery</h2>
+<div class="main-layout">
+    <div class="client-panel">
+        <div class="panel-header">
+            <div class="logo-inline">
+                <img src="https://www.akavin.online/logo.png" alt="Akavin Logo" onerror="this.src='https://placehold.co/160x45?text=Akavin';">
+            </div>
+            <div class="projects-title">
+                <i class="fas fa-layer-group"></i> PROJECTS
+            </div>
+        </div>
+        <div class="client-list-container">
+            <div class="client-list" id="clientList">
+                <div class="client-card active" data-client="besant">
+                    <i class="fas fa-building"></i> Besant Nagar Project 1
+                </div>
+                <div class="client-card" data-client="sample">
+                    <i class="fas fa-folder-tree"></i> Sample
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="gallery-grid">
-      <div class="thumbnail-grid" id="assetGallery">
-        <div class="thumb-loading" style="justify-content:center; width:100%; grid-column:1/-1;">Loading gallery assets...</div>
-      </div>
-    </div>
-  </div>
 
-  <!-- SECTION 2: 360° VIRTUAL TOUR (4/5, clean, no description, no hint text) -->
-  <div class="section">
-    <div class="section-header">
-      <h2>🌍 360° Virtual Expedition</h2>
+    <div class="right-area">
+        <div class="ribbon-section">
+            <div class="ribbon-label">
+                <i class="fas fa-images"></i>
+                <h4 id="ribbonDynamicTitle">GALLERY PREVIEW</h4>
+            </div>
+            <div id="imageRibbon" class="image-ribbon">
+                <div class="no-ribbon-msg">✨ Select a project to view images</div>
+            </div>
+        </div>
+
+        <div class="tour-viewer">
+            <div class="tour-label-badge" id="tourBadge">🎯 360° Immersive View</div>
+            <div class="info-panel" id="infoPanel">🖱️ Drag to look around | Scroll to zoom</div>
+            <div id="panoContainer"></div>
+        </div>
     </div>
-    <div class="tour-wrapper">
-      <div class="kuula-embed-container" id="kuulaBlock">
-        <iframe 
-          src="https://kuula.co/share/5RD8f?logo=1&info=1&fs=1&vr=0&sd=1&thumbs=1" 
-          allow="fullscreen; gyroscope; accelerometer; vr; xr-spatial-tracking" 
-          allowfullscreen 
-          loading="lazy"
-          title="Akavin 360 VR Tour"
-          referrerpolicy="strict-origin-when-cross-origin">
-        </iframe>
-      </div>
-    </div>
-  </div>
 </div>
 
 <script>
-  (function() {
-    // ============================================================
-    // 1) KUULA 4/5 block: open full tour in new tab when clicking container background
-    // ============================================================
-    const kuulaContainer = document.getElementById('kuulaBlock');
-    const kuulaUrl = 'https://kuula.co/share/5RD8f?logo=1&info=1&fs=1&vr=0&sd=1&thumbs=1';
+    // ============================================
+    // WORKING 360° PANORAMA - Using a reliable demo image
+    // Replace this URL with your own tour360.jpg when ready
+    // ============================================
+    const WORKING_PANORAMA_URL = "https://raw.githubusercontent.com/marzipano/marzipano/master/data/example/kitchen.jpg";
     
-    if (kuulaContainer) {
-      kuulaContainer.addEventListener('click', (e) => {
-        // Avoid opening when click is inside iframe (so VR navigation stays smooth)
-        let targetEl = e.target;
-        let isIframeClick = false;
-        while (targetEl && targetEl !== kuulaContainer) {
-          if (targetEl.tagName === 'IFRAME') {
-            isIframeClick = true;
-            break;
-          }
-          targetEl = targetEl.parentElement;
-        }
-        if (!isIframeClick) {
-          window.open(kuulaUrl, '_blank', 'noopener,noreferrer');
-        }
-      });
-      kuulaContainer.setAttribute('aria-label', 'Open full 360 VR tour in new window (Kuula)');
-    }
-
-    // ============================================================
-    // 2) GALLERY SECTION: 1/5 images (assets folder)
-    //    pics pointing to www.tours.akavin.online/assets/
-    // ============================================================
-    const assetBaseURL = 'assets/';
-    // Asset list - image filenames that should exist in /assets/ directory
-    const assetList = [
-      { file: '1.JPG' },
-      { file: '2.JPG' },
-      { file: '3.JPG' },
-      { file: '4.JPG' },
-      { file: '5.JPG' }
-    ];
-
-    const galleryContainer = document.getElementById('assetGallery');
-    if (galleryContainer) {
-      // Clear loading indicator
-      galleryContainer.innerHTML = '';
-      
-      // Loop through assets and create thumbnail cards
-      assetList.forEach(asset => {
-        const imageUrl = assetBaseURL + asset.file;
-        const card = document.createElement('div');
-        card.className = 'thumb-card';
-        card.setAttribute('tabindex', '0');
-        card.setAttribute('role', 'button');
-        card.setAttribute('aria-label', `View full image ${asset.file}`);
-        
-        const imgWrapper = document.createElement('div');
-        const img = document.createElement('img');
-        img.className = 'thumb-img';
-        img.alt = '';  // empty alt as per removal of names
-        img.loading = 'lazy';
-        img.src = imageUrl;
-        
-        let fallbackActive = false;
-        img.onerror = function() {
-          if (fallbackActive) return;
-          fallbackActive = true;
-          img.style.display = 'none';
-          const fallbackDiv = document.createElement('div');
-          fallbackDiv.className = 'thumb-img-error';
-          fallbackDiv.innerHTML = `📷 ${asset.file}<br>place in /assets/`;
-          fallbackDiv.style.display = 'flex';
-          fallbackDiv.style.alignItems = 'center';
-          fallbackDiv.style.justifyContent = 'center';
-          fallbackDiv.style.background = '#0f172a';
-          fallbackDiv.style.color = '#cbd5e1';
-          fallbackDiv.style.fontSize = '0.7rem';
-          fallbackDiv.style.padding = '0.5rem';
-          fallbackDiv.style.textAlign = 'center';
-          fallbackDiv.style.aspectRatio = '16/9';
-          fallbackDiv.style.width = '100%';
-          imgWrapper.innerHTML = '';
-          imgWrapper.appendChild(fallbackDiv);
-        };
-        
-        img.onload = () => {
-          if (fallbackActive) return;
-          img.style.display = 'block';
-        };
-        
-        imgWrapper.appendChild(img);
-        card.appendChild(imgWrapper);
-        
-        // Click event: open full resolution image in new tab
-        card.addEventListener('click', (e) => {
-          e.stopPropagation();
-          window.open(imageUrl, '_blank');
-        });
-        
-        // Keyboard accessibility
-        card.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            card.click();
-          }
-        });
-        
-        galleryContainer.appendChild(card);
-      });
-    } else {
-      console.warn('Asset gallery container missing');
-    }
+    // Your custom panorama path (currently not working - file missing)
+    const YOUR_PANORAMA_PATH = "assets/evolve/tour360.jpg";
     
-    // Additional: ensure contact corner does not overlap content on small screens
-    const adjustCorner = () => {
-      const corner = document.querySelector('.contact-corner');
-      if (window.innerWidth <= 780 && corner) {
-        corner.style.position = 'relative';
-        corner.style.top = 'auto';
-        corner.style.right = 'auto';
-        corner.style.marginBottom = '1rem';
-      } else if (window.innerWidth > 780 && corner) {
-        corner.style.position = 'absolute';
-        corner.style.top = '1.5rem';
-        corner.style.right = '1.5rem';
-        corner.style.marginBottom = '0';
-      }
+    // Check if we should use demo or your image
+    let USE_DEMO_PANO = true; // Set to false when your image is ready
+    
+    const projectData = {
+        besant: {
+            name: "Besant Nagar Project 1",
+            imageList: [
+                "assets/evolve/B0.jpeg",
+                "assets/evolve/B1.jpeg",
+                "assets/evolve/B2.jpeg",
+                "assets/evolve/B3.jpeg",
+                "assets/evolve/B4.jpeg",
+                "assets/evolve/B5.jpeg"
+            ],
+            tourType: "marzipano",
+            tourResource: USE_DEMO_PANO ? WORKING_PANORAMA_URL : YOUR_PANORAMA_PATH,
+            isUsingDemo: USE_DEMO_PANO
+        },
+        sample: {
+            name: "Sample Project",
+            imageList: [
+                "assets/Sample/0.JPG",
+                "assets/Sample/1.JPG",
+                "assets/Sample/2.JPG",
+                "assets/Sample/3.JPG",
+                "assets/Sample/4.JPG",
+                "assets/Sample/5.JPG"
+            ],
+            tourType: "kuula",
+            tourResource: "https://kuula.co/share/5RD8f",
+            isUsingDemo: false
+        }
     };
-    window.addEventListener('resize', adjustCorner);
-    adjustCorner();
+
+    const clientItems = document.querySelectorAll('.client-card');
+    const ribbonContainer = document.getElementById('imageRibbon');
+    const ribbonTitle = document.getElementById('ribbonDynamicTitle');
+    const panoContainer = document.getElementById('panoContainer');
+    const tourBadge = document.getElementById('tourBadge');
+    const infoPanel = document.getElementById('infoPanel');
+
+    let currentViewer = null;
+    let activeScene = null;
+    let activeClientId = 'besant';
+
+    function destroyMarzipano() {
+        if (currentViewer) {
+            try {
+                if (activeScene && activeScene.destroy) activeScene.destroy();
+                if (currentViewer.destroy) currentViewer.destroy();
+            } catch(e) { console.warn(e); }
+            currentViewer = null;
+            activeScene = null;
+        }
+        while (panoContainer.firstChild) {
+            panoContainer.removeChild(panoContainer.firstChild);
+        }
+    }
+
+    function initMarzipano(imageUrl) {
+        return new Promise((resolve, reject) => {
+            try {
+                destroyMarzipano();
+                
+                const viewer = new marzipano.Viewer({
+                    container: panoContainer,
+                    controls: {
+                        mouseViewMode: 'drag',
+                        touchViewMode: 'drag'
+                    }
+                });
+                currentViewer = viewer;
+                
+                const source = marzipano.ImageUrlSource.fromString(imageUrl);
+                const geometry = new marzipano.EquirectGeometry([{ width: 4096 }]);
+                const limiter = marzipano.RectilinearView.limit.traditional(4096, Math.PI * 2);
+                const view = new marzipano.RectilinearView(null, limiter);
+                
+                const scene = viewer.createScene({
+                    source: source,
+                    geometry: geometry,
+                    view: view,
+                    pinFirstLevel: true
+                });
+                
+                activeScene = scene;
+                scene.switchTo();
+                
+                setTimeout(() => {
+                    if (currentViewer && currentViewer.resize) {
+                        currentViewer.resize();
+                    }
+                    resolve();
+                }, 100);
+                
+            } catch (err) {
+                console.error("Marzipano error:", err);
+                reject(err);
+            }
+        });
+    }
+
+    async function loadMarzipanoWithTest(imageUrl, projectName, isDemo) {
+        const testImg = new Image();
+        
+        const imageLoadable = await new Promise((resolve) => {
+            testImg.onload = () => resolve(true);
+            testImg.onerror = () => resolve(false);
+            testImg.src = imageUrl;
+            setTimeout(() => resolve(false), 5000);
+        });
+        
+        if (imageLoadable) {
+            if (isDemo) {
+                tourBadge.innerHTML = `🎯 DEMO 360° VIEW • Drag to explore (Your tour360.jpg coming soon)`;
+                infoPanel.innerHTML = `📸 DEMO MODE: Working panorama | Add your own tour360.jpg to /assets/evolve/`;
+            } else {
+                tourBadge.innerHTML = `🌍 360° VIEW • ${projectName} (Drag to look around)`;
+                infoPanel.innerHTML = `🖱️ Drag to look around | Scroll to zoom | Your custom panorama loaded!`;
+            }
+            await initMarzipano(imageUrl);
+        } else {
+            console.warn(`Panorama not found at: ${imageUrl}`);
+            showError(
+                "360° Image Not Found",
+                `Attempted to load: ${imageUrl}\n\nPlease place your equirectangular panorama at:\nassets/evolve/tour360.jpg\n\nCurrently showing demo panorama instead.`,
+                true
+            );
+            // Fallback to demo panorama
+            await initMarzipano(WORKING_PANORAMA_URL);
+            tourBadge.innerHTML = `⚠️ Using Demo • Add your tour360.jpg to /assets/evolve/`;
+        }
+    }
+
+    function showError(message, details, showFallbackNote = false) {
+        // Don't destroy, just show overlay
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error-message';
+        errorDiv.style.position = 'absolute';
+        errorDiv.style.top = '0';
+        errorDiv.style.left = '0';
+        errorDiv.style.width = '100%';
+        errorDiv.style.height = '100%';
+        errorDiv.style.zIndex = '15';
+        errorDiv.style.background = 'rgba(0,0,0,0.9)';
+        errorDiv.innerHTML = `
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3>${message}</h3>
+            <code>${details.replace(/\n/g, '<br>')}</code>
+            <p style="margin-top: 20px; font-size: 14px; color: #f4a261;">
+                💡 <strong>How to add your own 360° panorama:</strong>
+            </p>
+            <div style="text-align: left; max-width: 400px; margin-top: 15px; font-size: 13px;">
+                1. Get an equirectangular 360° photo (2:1 aspect ratio, e.g., 4096x2048px)<br>
+                2. Name it <strong>tour360.jpg</strong><br>
+                3. Place it in: <strong>/assets/evolve/tour360.jpg</strong><br>
+                4. Refresh the page
+            </div>
+            ${showFallbackNote ? '<p style="margin-top: 20px; font-size: 12px; color: #888;">✨ Using working demo panorama until your image is ready.</p>' : ''}
+            <button onclick="location.reload()" style="margin-top: 25px; background: #f4a261; border: none; padding: 10px 30px; border-radius: 30px; cursor: pointer; color: #1e4663; font-weight: bold;">
+                Retry
+            </button>
+        `;
+        
+        // Remove after 3 seconds if showFallbackNote (auto-dismiss)
+        panoContainer.appendChild(errorDiv);
+        if (showFallbackNote) {
+            setTimeout(() => {
+                if (errorDiv.parentNode) errorDiv.remove();
+            }, 8000);
+        }
+    }
+
+    function showKuulaEmbed(url) {
+        destroyMarzipano();
+        const iframe = document.createElement('iframe');
+        let embedUrl = url;
+        if (url.includes('kuula.co/share/') && !url.includes('embed')) {
+            embedUrl = url + (url.includes('?') ? '&embed=1' : '?embed=1');
+        }
+        iframe.src = embedUrl;
+        iframe.className = 'iframe-embed';
+        iframe.setAttribute('allowfullscreen', 'true');
+        iframe.setAttribute('allow', 'autoplay; gyroscope; accelerometer; fullscreen');
+        panoContainer.appendChild(iframe);
+        tourBadge.innerHTML = `🎥 KUULA 360° • Interactive Tour`;
+        infoPanel.innerHTML = `🎬 Kuula interactive tour | Click and drag to explore`;
+    }
+
+    async function loadTour(clientId) {
+        const project = projectData[clientId];
+        if (!project) return;
+        
+        if (project.tourType === 'marzipano') {
+            await loadMarzipanoWithTest(project.tourResource, project.name, project.isUsingDemo);
+        } else if (project.tourType === 'kuula') {
+            showKuulaEmbed(project.tourResource);
+        }
+    }
+
+    function renderRibbon(clientId) {
+        const project = projectData[clientId];
+        if (!project) return;
+        
+        ribbonTitle.innerHTML = `📸 ${project.name} · ${project.imageList.length} images`;
+        const images = project.imageList;
+        
+        if (!images || images.length === 0) {
+            ribbonContainer.innerHTML = `<div class="no-ribbon-msg"><i class="fas fa-exclamation-triangle"></i> No preview images</div>`;
+            return;
+        }
+        
+        let ribbonHtml = '';
+        images.forEach((imgPath) => {
+            let fileName = imgPath.split('/').pop();
+            ribbonHtml += `
+                <div class="thumb-item" onclick="window.open('${imgPath}', '_blank')">
+                    <img class="thumb-icon" src="${imgPath}" alt="${fileName}" loading="lazy" 
+                         onerror="this.src='https://placehold.co/200x200?text=Missing';">
+                    <span>${fileName.length > 12 ? fileName.slice(0,9)+'..' : fileName}</span>
+                </div>
+            `;
+        });
+        ribbonContainer.innerHTML = ribbonHtml;
+    }
+
+    function switchActiveClient(clientId) {
+        activeClientId = clientId;
+        clientItems.forEach(item => {
+            const itemClient = item.getAttribute('data-client');
+            if (itemClient === clientId) {
+                item.classList.add('active');
+            } else {
+                item.classList.remove('active');
+            }
+        });
+        
+        renderRibbon(clientId);
+        loadTour(clientId);
+    }
+
+    function handleResize() {
+        if (activeClientId === 'besant' && currentViewer && currentViewer.resize) {
+            setTimeout(() => {
+                if (currentViewer && currentViewer.resize) currentViewer.resize();
+            }, 100);
+        }
+    }
+
+    function bindClientEvents() {
+        clientItems.forEach(card => {
+            card.addEventListener('click', () => {
+                const clientVal = card.getAttribute('data-client');
+                if (clientVal && clientVal !== activeClientId) {
+                    switchActiveClient(clientVal);
+                }
+            });
+        });
+    }
+
+    function init() {
+        bindClientEvents();
+        switchActiveClient('besant');
+        window.addEventListener('resize', handleResize);
+        
+        console.log("%c🔍 AKAVIN 360° TOUR", "color: #f4a261; font-size: 16px; font-weight: bold;");
+        console.log("%c✨ Currently showing WORKING DEMO panorama", "color: #4caf50;");
+        console.log("%c📁 To use your own image:", "color: #f4a261;");
+        console.log("%c   Place tour360.jpg in: /assets/evolve/", "color: #fff; background: #1e4663; padding: 2px 6px; border-radius: 4px;");
+        console.log("%c   Then set USE_DEMO_PANO = false in the code", "color: #ff9800;");
+    }
     
-    // Clean: No leftover tooltips or text added — all removed per request.
-    // Blue line removed from both headings.
-    // All requested phrases: "Click any image to open full resolution..." , "For custom assets..." (now only top-right corner)
-    // "Step inside the immersive tour..." and "Click background to open full tour" are completely removed.
-    // Email is bold and clickable.
-    console.log('Akavin Tours | Clean layout: gallery first, tour second, no extra text, contact in corner.');
-  })();
+    document.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
 </html>
