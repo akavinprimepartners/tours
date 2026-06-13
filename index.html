@@ -4,8 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Akavin | 360° Tour & Visual Gallery</title>
-    <script src="https://cdn.jsdelivr.net/npm/marzipano@0.10.0/marzipano.min.js"></script>
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Pannellum - Reliable 360° panorama viewer -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css">
+    <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
     <style>
         * {
             margin: 0;
@@ -22,6 +25,29 @@
             overflow: hidden;
         }
 
+        /* Loading spinner */
+        .loading-spinner {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 48px;
+            height: 48px;
+            border: 4px solid rgba(255,255,255,0.2);
+            border-top: 4px solid #f4a261;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            z-index: 1000;
+            display: none;
+            pointer-events: none;
+        }
+
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        /* MAIN FLEX LAYOUT */
         .main-layout {
             display: flex;
             flex: 1;
@@ -29,6 +55,7 @@
             overflow: hidden;
         }
 
+        /* Left panel */
         .client-panel {
             width: 300px;
             background: #ffffff;
@@ -37,6 +64,7 @@
             display: flex;
             flex-direction: column;
             flex-shrink: 0;
+            z-index: 10;
         }
 
         .panel-header {
@@ -106,6 +134,7 @@
         }
         .client-card.active i { color: #ffe0a3; }
 
+        /* Right area */
         .right-area {
             flex: 1;
             display: flex;
@@ -114,6 +143,7 @@
             background: #fefefe;
         }
 
+        /* Ribbon section */
         .ribbon-section {
             background: #ffffff;
             border-bottom: 1px solid #e5edf5;
@@ -137,6 +167,7 @@
             gap: 14px;
             overflow-x: auto;
             padding-bottom: 8px;
+            scrollbar-width: thin;
         }
         .image-ribbon::-webkit-scrollbar { height: 5px; }
         .thumb-item {
@@ -173,6 +204,7 @@
             text-align: center;
         }
 
+        /* Tour viewer with Pannellum */
         .tour-viewer {
             flex: 1;
             background: #0c1218;
@@ -182,6 +214,11 @@
             overflow: hidden;
             margin: 6px 16px 16px 16px;
             box-shadow: 0 10px 24px rgba(0,0,0,0.2);
+        }
+        #panorama {
+            width: 100%;
+            height: 100%;
+            background: #000;
         }
         .tour-label-badge {
             position: absolute;
@@ -197,57 +234,22 @@
             font-weight: 500;
             pointer-events: none;
         }
-        #panoContainer {
-            width: 100%;
-            height: 100%;
-            background: #000;
-        }
-        .iframe-embed {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-        .info-panel {
+        .instruction-hint {
             position: absolute;
-            bottom: 20px;
+            bottom: 14px;
             right: 20px;
             z-index: 20;
             background: rgba(0,0,0,0.6);
             backdrop-filter: blur(8px);
-            padding: 8px 16px;
-            border-radius: 40px;
+            padding: 6px 12px;
+            border-radius: 20px;
             color: #f4a261;
             font-size: 0.7rem;
-            font-family: monospace;
             pointer-events: none;
         }
-        .error-message {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            background: #0c1218;
-            color: #ccc;
-            text-align: center;
-            padding: 20px;
-        }
-        .error-message i {
-            font-size: 48px;
-            color: #f4a261;
-            margin-bottom: 20px;
-        }
-        .error-message code {
-            background: #2a2f35;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 12px;
-            margin: 12px 0;
-            word-break: break-all;
-        }
-        .success-message {
+        .status-bar {
             position: absolute;
-            bottom: 20px;
+            bottom: 14px;
             left: 20px;
             z-index: 20;
             background: rgba(0,0,0,0.6);
@@ -257,6 +259,11 @@
             color: #4caf50;
             font-size: 0.7rem;
             pointer-events: none;
+        }
+        .iframe-embed {
+            width: 100%;
+            height: 100%;
+            border: none;
         }
 
         @media (max-width: 800px) {
@@ -271,6 +278,7 @@
 <body>
 
 <div class="main-layout">
+    <!-- Left Column -->
     <div class="client-panel">
         <div class="panel-header">
             <div class="logo-inline">
@@ -292,7 +300,9 @@
         </div>
     </div>
 
+    <!-- Right side -->
     <div class="right-area">
+        <!-- Ribbon -->
         <div class="ribbon-section">
             <div class="ribbon-label">
                 <i class="fas fa-images"></i>
@@ -303,26 +313,25 @@
             </div>
         </div>
 
+        <!-- Tour viewer -->
         <div class="tour-viewer">
             <div class="tour-label-badge" id="tourBadge">🎯 360° Immersive View</div>
-            <div class="info-panel" id="infoPanel">🖱️ Drag to look around | Scroll to zoom</div>
-            <div id="panoContainer"></div>
+            <div class="instruction-hint">🖱️ Drag to rotate • Scroll to zoom</div>
+            <div class="status-bar" id="statusMsg">🎮 Loading panorama...</div>
+            <div id="panorama"></div>
         </div>
     </div>
 </div>
 
+<div class="loading-spinner" id="spinner"></div>
+
 <script>
-    // ============================================
-    // WORKING 360° PANORAMA - Using a reliable demo image
-    // Replace this URL with your own tour360.jpg when ready
-    // ============================================
-    const WORKING_PANORAMA_URL = "https://raw.githubusercontent.com/marzipano/marzipano/master/data/example/kitchen.jpg";
+    // Pannellum viewer instance
+    let pannellumViewer = null;
+    let activeClientId = 'besant';
     
-    // Your custom panorama path (currently not working - file missing)
-    const YOUR_PANORAMA_PATH = "assets/evolve/tour360.jpg";
-    
-    // Check if we should use demo or your image
-    let USE_DEMO_PANO = true; // Set to false when your image is ready
+    // Working demo panorama (reliable public test image)
+    const WORKING_PANO = "https://raw.githubusercontent.com/marzipano/marzipano/master/data/example/kitchen.jpg";
     
     const projectData = {
         besant: {
@@ -335,9 +344,10 @@
                 "assets/evolve/B4.jpeg",
                 "assets/evolve/B5.jpeg"
             ],
-            tourType: "marzipano",
-            tourResource: USE_DEMO_PANO ? WORKING_PANORAMA_URL : YOUR_PANORAMA_PATH,
-            isUsingDemo: USE_DEMO_PANO
+            tourType: "pannellum",
+            // YOUR CUSTOM PANORAMA - change this path when you have your image
+            tourResource: "assets/evolve/tour360.jpg",
+            fallbackResource: WORKING_PANO
         },
         sample: {
             name: "Sample Project",
@@ -350,152 +360,142 @@
                 "assets/Sample/5.JPG"
             ],
             tourType: "kuula",
-            tourResource: "https://kuula.co/share/5RD8f",
-            isUsingDemo: false
+            tourResource: "https://kuula.co/share/5RD8f"
         }
     };
 
+    // DOM elements
     const clientItems = document.querySelectorAll('.client-card');
     const ribbonContainer = document.getElementById('imageRibbon');
     const ribbonTitle = document.getElementById('ribbonDynamicTitle');
-    const panoContainer = document.getElementById('panoContainer');
+    const panoContainer = document.getElementById('panorama');
     const tourBadge = document.getElementById('tourBadge');
-    const infoPanel = document.getElementById('infoPanel');
+    const statusMsg = document.getElementById('statusMsg');
+    const spinner = document.getElementById('spinner');
 
-    let currentViewer = null;
-    let activeScene = null;
-    let activeClientId = 'besant';
+    // Show/hide spinner
+    function showSpinner() {
+        spinner.style.display = 'block';
+    }
+    function hideSpinner() {
+        spinner.style.display = 'none';
+    }
 
-    function destroyMarzipano() {
-        if (currentViewer) {
+    // Destroy existing viewer
+    function destroyViewer() {
+        if (pannellumViewer) {
             try {
-                if (activeScene && activeScene.destroy) activeScene.destroy();
-                if (currentViewer.destroy) currentViewer.destroy();
+                pannellumViewer.destroy();
             } catch(e) { console.warn(e); }
-            currentViewer = null;
-            activeScene = null;
+            pannellumViewer = null;
         }
+        // Clear container
         while (panoContainer.firstChild) {
             panoContainer.removeChild(panoContainer.firstChild);
         }
     }
 
-    function initMarzipano(imageUrl) {
+    // Initialize Pannellum with panorama image
+    function initPannellum(imageUrl, isDemo = false) {
         return new Promise((resolve, reject) => {
             try {
-                destroyMarzipano();
+                destroyViewer();
+                showSpinner();
                 
-                const viewer = new marzipano.Viewer({
-                    container: panoContainer,
-                    controls: {
-                        mouseViewMode: 'drag',
-                        touchViewMode: 'drag'
+                // Test if image exists and is accessible
+                const testImg = new Image();
+                testImg.onload = () => {
+                    try {
+                        pannellumViewer = pannellum.viewer('panorama', {
+                            type: "equirectangular",
+                            panorama: imageUrl,
+                            autoLoad: true,
+                            showZoomCtrl: true,
+                            showFullscreenCtrl: true,
+                            compass: true,
+                            hotSpotDebug: false,
+                            default: {
+                                firstScene: true,
+                                sceneFadeDuration: 1000
+                            }
+                        });
+                        
+                        hideSpinner();
+                        
+                        if (isDemo) {
+                            statusMsg.innerHTML = '⚠️ Using demo panorama • Add your own tour360.jpg to /assets/evolve/';
+                            tourBadge.innerHTML = '🎯 DEMO MODE • Working 360° view (Drag to explore)';
+                        } else {
+                            statusMsg.innerHTML = '✓ Custom panorama loaded successfully!';
+                            tourBadge.innerHTML = '🌍 360° VIEW • Besant Nagar Project 1 (Drag to look around)';
+                        }
+                        resolve();
+                    } catch (err) {
+                        hideSpinner();
+                        console.error("Pannellum init error:", err);
+                        reject(err);
                     }
-                });
-                currentViewer = viewer;
-                
-                const source = marzipano.ImageUrlSource.fromString(imageUrl);
-                const geometry = new marzipano.EquirectGeometry([{ width: 4096 }]);
-                const limiter = marzipano.RectilinearView.limit.traditional(4096, Math.PI * 2);
-                const view = new marzipano.RectilinearView(null, limiter);
-                
-                const scene = viewer.createScene({
-                    source: source,
-                    geometry: geometry,
-                    view: view,
-                    pinFirstLevel: true
-                });
-                
-                activeScene = scene;
-                scene.switchTo();
-                
-                setTimeout(() => {
-                    if (currentViewer && currentViewer.resize) {
-                        currentViewer.resize();
-                    }
-                    resolve();
-                }, 100);
-                
+                };
+                testImg.onerror = () => {
+                    hideSpinner();
+                    console.warn(`Image failed to load: ${imageUrl}`);
+                    reject(new Error(`Image not found: ${imageUrl}`));
+                };
+                testImg.src = imageUrl;
             } catch (err) {
-                console.error("Marzipano error:", err);
+                hideSpinner();
                 reject(err);
             }
         });
     }
 
-    async function loadMarzipanoWithTest(imageUrl, projectName, isDemo) {
-        const testImg = new Image();
-        
-        const imageLoadable = await new Promise((resolve) => {
-            testImg.onload = () => resolve(true);
-            testImg.onerror = () => resolve(false);
-            testImg.src = imageUrl;
-            setTimeout(() => resolve(false), 5000);
-        });
-        
-        if (imageLoadable) {
-            if (isDemo) {
-                tourBadge.innerHTML = `🎯 DEMO 360° VIEW • Drag to explore (Your tour360.jpg coming soon)`;
-                infoPanel.innerHTML = `📸 DEMO MODE: Working panorama | Add your own tour360.jpg to /assets/evolve/`;
-            } else {
-                tourBadge.innerHTML = `🌍 360° VIEW • ${projectName} (Drag to look around)`;
-                infoPanel.innerHTML = `🖱️ Drag to look around | Scroll to zoom | Your custom panorama loaded!`;
+    // Load panorama with fallback
+    async function loadPanorama(imageUrl, fallbackUrl, projectName) {
+        try {
+            await initPannellum(imageUrl, false);
+        } catch (err) {
+            console.log(`Custom image failed, loading fallback demo...`);
+            statusMsg.innerHTML = `⚠️ Could not load ${imageUrl}, showing demo panorama instead`;
+            tourBadge.innerHTML = `🎯 Using Demo • Add your panorama to /assets/evolve/tour360.jpg`;
+            try {
+                await initPannellum(fallbackUrl, true);
+            } catch (fallbackErr) {
+                console.error("Fallback also failed:", fallbackErr);
+                statusMsg.innerHTML = '❌ Error loading any panorama. Please check console.';
+                showErrorInContainer();
             }
-            await initMarzipano(imageUrl);
-        } else {
-            console.warn(`Panorama not found at: ${imageUrl}`);
-            showError(
-                "360° Image Not Found",
-                `Attempted to load: ${imageUrl}\n\nPlease place your equirectangular panorama at:\nassets/evolve/tour360.jpg\n\nCurrently showing demo panorama instead.`,
-                true
-            );
-            // Fallback to demo panorama
-            await initMarzipano(WORKING_PANORAMA_URL);
-            tourBadge.innerHTML = `⚠️ Using Demo • Add your tour360.jpg to /assets/evolve/`;
         }
     }
 
-    function showError(message, details, showFallbackNote = false) {
-        // Don't destroy, just show overlay
+    // Show error message in container
+    function showErrorInContainer() {
+        destroyViewer();
         const errorDiv = document.createElement('div');
-        errorDiv.className = 'error-message';
-        errorDiv.style.position = 'absolute';
-        errorDiv.style.top = '0';
-        errorDiv.style.left = '0';
-        errorDiv.style.width = '100%';
-        errorDiv.style.height = '100%';
-        errorDiv.style.zIndex = '15';
-        errorDiv.style.background = 'rgba(0,0,0,0.9)';
+        errorDiv.style.cssText = 'display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; background:#0c1218; color:#ccc; text-align:center; padding:20px;';
         errorDiv.innerHTML = `
-            <i class="fas fa-exclamation-triangle"></i>
-            <h3>${message}</h3>
-            <code>${details.replace(/\n/g, '<br>')}</code>
-            <p style="margin-top: 20px; font-size: 14px; color: #f4a261;">
-                💡 <strong>How to add your own 360° panorama:</strong>
-            </p>
-            <div style="text-align: left; max-width: 400px; margin-top: 15px; font-size: 13px;">
-                1. Get an equirectangular 360° photo (2:1 aspect ratio, e.g., 4096x2048px)<br>
-                2. Name it <strong>tour360.jpg</strong><br>
-                3. Place it in: <strong>/assets/evolve/tour360.jpg</strong><br>
-                4. Refresh the page
+            <i class="fas fa-exclamation-triangle" style="font-size:48px; color:#f4a261; margin-bottom:20px;"></i>
+            <h3 style="margin-bottom:8px;">360° Image Failed to Load</h3>
+            <p style="margin-bottom:12px;">Could not load panorama from:</p>
+            <code style="background:#2a2f35; padding:8px 16px; border-radius:8px; font-size:12px;">assets/evolve/tour360.jpg</code>
+            <div style="margin-top:20px; text-align:left; max-width:400px;">
+                <p><strong>📁 How to add your own 360° panorama:</strong></p>
+                <ul style="margin-top:10px; margin-left:20px;">
+                    <li>1. Get an equirectangular 360° photo (2:1 aspect ratio)</li>
+                    <li>2. Name it <strong>tour360.jpg</strong></li>
+                    <li>3. Place it in: <strong>/assets/evolve/tour360.jpg</strong></li>
+                    <li>4. Refresh the page</li>
+                </ul>
             </div>
-            ${showFallbackNote ? '<p style="margin-top: 20px; font-size: 12px; color: #888;">✨ Using working demo panorama until your image is ready.</p>' : ''}
-            <button onclick="location.reload()" style="margin-top: 25px; background: #f4a261; border: none; padding: 10px 30px; border-radius: 30px; cursor: pointer; color: #1e4663; font-weight: bold;">
+            <button onclick="location.reload()" style="margin-top:25px; background:#f4a261; border:none; padding:10px 30px; border-radius:30px; cursor:pointer; color:#1e4663; font-weight:bold;">
                 Retry
             </button>
         `;
-        
-        // Remove after 3 seconds if showFallbackNote (auto-dismiss)
         panoContainer.appendChild(errorDiv);
-        if (showFallbackNote) {
-            setTimeout(() => {
-                if (errorDiv.parentNode) errorDiv.remove();
-            }, 8000);
-        }
     }
 
+    // Kuula embed
     function showKuulaEmbed(url) {
-        destroyMarzipano();
+        destroyViewer();
         const iframe = document.createElement('iframe');
         let embedUrl = url;
         if (url.includes('kuula.co/share/') && !url.includes('embed')) {
@@ -507,20 +507,22 @@
         iframe.setAttribute('allow', 'autoplay; gyroscope; accelerometer; fullscreen');
         panoContainer.appendChild(iframe);
         tourBadge.innerHTML = `🎥 KUULA 360° • Interactive Tour`;
-        infoPanel.innerHTML = `🎬 Kuula interactive tour | Click and drag to explore`;
+        statusMsg.innerHTML = `🎬 Kuula interactive tour | Click and drag to explore`;
     }
 
+    // Load tour based on client
     async function loadTour(clientId) {
         const project = projectData[clientId];
         if (!project) return;
         
-        if (project.tourType === 'marzipano') {
-            await loadMarzipanoWithTest(project.tourResource, project.name, project.isUsingDemo);
+        if (project.tourType === 'pannellum') {
+            await loadPanorama(project.tourResource, project.fallbackResource, project.name);
         } else if (project.tourType === 'kuula') {
             showKuulaEmbed(project.tourResource);
         }
     }
 
+    // Render ribbon thumbnails
     function renderRibbon(clientId) {
         const project = projectData[clientId];
         if (!project) return;
@@ -547,6 +549,7 @@
         ribbonContainer.innerHTML = ribbonHtml;
     }
 
+    // Switch active client
     function switchActiveClient(clientId) {
         activeClientId = clientId;
         clientItems.forEach(item => {
@@ -562,14 +565,16 @@
         loadTour(clientId);
     }
 
+    // Handle window resize
     function handleResize() {
-        if (activeClientId === 'besant' && currentViewer && currentViewer.resize) {
+        if (pannellumViewer && typeof pannellumViewer.resize === 'function') {
             setTimeout(() => {
-                if (currentViewer && currentViewer.resize) currentViewer.resize();
+                if (pannellumViewer) pannellumViewer.resize();
             }, 100);
         }
     }
 
+    // Bind client click events
     function bindClientEvents() {
         clientItems.forEach(card => {
             card.addEventListener('click', () => {
@@ -581,16 +586,16 @@
         });
     }
 
+    // Initialize
     function init() {
         bindClientEvents();
         switchActiveClient('besant');
         window.addEventListener('resize', handleResize);
         
-        console.log("%c🔍 AKAVIN 360° TOUR", "color: #f4a261; font-size: 16px; font-weight: bold;");
-        console.log("%c✨ Currently showing WORKING DEMO panorama", "color: #4caf50;");
+        console.log("%c🔍 AKAVIN 360° TOUR - Pannellum Edition", "color: #f4a261; font-size: 16px; font-weight: bold;");
+        console.log("%c✨ Using Pannellum - much more reliable 360° viewer", "color: #4caf50;");
         console.log("%c📁 To use your own image:", "color: #f4a261;");
         console.log("%c   Place tour360.jpg in: /assets/evolve/", "color: #fff; background: #1e4663; padding: 2px 6px; border-radius: 4px;");
-        console.log("%c   Then set USE_DEMO_PANO = false in the code", "color: #ff9800;");
     }
     
     document.addEventListener('DOMContentLoaded', init);
